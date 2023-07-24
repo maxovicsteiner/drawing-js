@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw.js</title>
+    <style>
+        body {
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            font-family: SF pro display, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #canvas {
+            border: 2px solid #aaa;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            margin: 0 auto;
+        }
+
+        .settings {
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            height: 100%;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .settings > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            width: max-content;
+        }
+
+        #clear {
+            padding: 5px;
+        }
+
+        @media (max-width: 1000px) {
+            body {
+                flex-direction: column;
+                gap: 0;
+            }
+            .settings{
+                height: 100px;
+                flex-direction:row ;
+                align-items: center;
+                width: 100%;
+                gap: .8rem;
+                padding: 0; 
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="settings">
+        <div>
+            <label for="color">Color</label>
+            <input type="color" id="color"/>
+        </div>
+        <div>
+            <label for="width">Line width</label>
+            <input type="range" id="width" min="1" max="20" value="3"/>
+        </div>
+        <div>
+            <label for="tool">Select your tool</label>
+            <select id="tool">
+                <option>Pen</option>
+                <option>Brush</option>
+                <option>Eraser</option>
+            </select>
+        </div>
+        <button id="clear">Clear</button>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const colorInput = document.getElementById('color');
+        const widthInput = document.getElementById('width');
+        const toolInput = document.getElementById('tool'); 
+        const clearButton = document.getElementById('clear');
+        const ctx = canvas.getContext("2d");
+        let painting = false;
+
+        clearButton.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        })
+
+        function resize() {
+            canvas.height = window.innerHeight * 90 / 100;
+            canvas.width = window.innerWidth * 80 / 100;
+        }
+
+        function draw(e) {
+            if (!painting) return;
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        }
+
+        window.addEventListener("load", () => {
+            resize();
+
+            
+            // Settings
+            let tool = toolInput.options[toolInput.selectedIndex].text;
+            let width = widthInput.value;
+            let color = colorInput.value;
+            ctx.lineWidth = width || 1;
+            ctx.strokeStyle = tool === "Eraser" ? "#fff" : color;
+            ctx.lineCap = tool === "Brush" ? "butt" : "round";
+
+            toolInput.addEventListener('change', () => {
+                tool = toolInput.options[toolInput.selectedIndex].text;
+                switch(tool) {
+                    case "Pen":
+                        ctx.strokeStyle = color;
+                        ctx.lineCap = "round";
+                        break;
+                    case "Brush":
+                        ctx.strokeStyle = color;
+                        ctx.lineCap = "butt";
+                        break;
+                    case "Eraser":
+                        ctx.strokeStyle = "#fff";
+                        ctx.lineCap = "round";
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            colorInput.addEventListener('change', () => {
+                color = colorInput.value;
+                ctx.strokeStyle = tool === "Eraser" ? "#fff" : color;
+            })
+
+            widthInput.addEventListener('change', () => {
+                width = widthInput.value;
+                ctx.lineWidth= width || 1;
+            })
+
+            canvas.addEventListener("mousedown", () => {
+                ctx.beginPath();
+                painting = true;
+            })
+            window.addEventListener("mouseup", () => {
+                painting = false;
+            })
+            canvas.addEventListener("mousemove", (e) => {
+                draw(e);
+            })
+        });
+
+        window.addEventListener("resize", () => {
+            resize();
+        })
+    </script>
+</body>
+</html>
